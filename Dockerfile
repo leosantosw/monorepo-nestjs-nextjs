@@ -1,5 +1,5 @@
 # Dependencies
-FROM node:18.16.1-alpine AS install
+FROM node:18.16.1-slim AS install
 
 WORKDIR /usr/src/app
 
@@ -9,8 +9,8 @@ RUN npm ci
 COPY turbo.json .
 
 COPY apps/api/package.json ./apps/api/
-# COPY apps/api/package-lock.json ./apps/api/
 COPY apps/client/package.json ./apps/client/
+# COPY apps/api/package-lock.json ./apps/api/
 # COPY apps/client/package-lock.json ./apps/client/
 
 RUN npm install --prefix apps/api
