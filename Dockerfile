@@ -1,15 +1,35 @@
-FROM node:18.16.1-slim
+# Dependencies
+FROM node:18.16.1-alpine AS install
 
-RUN mkdir -p /usr/src
+WORKDIR /usr/src/app
 
-WORKDIR /usr/src
+COPY package.json package-lock.json ./
+RUN npm ci
 
-COPY . /usr/src
+COPY turbo.json .
 
-RUN npm install
+COPY apps/api/package.json ./apps/api/
+# COPY apps/api/package-lock.json ./apps/api/
+COPY apps/client/package.json ./apps/client/
+# COPY apps/client/package-lock.json ./apps/client/
 
-RUN npm run build
+RUN npm install --prefix apps/api
+RUN npm install --prefix apps/client
 
-EXPOSE 3000 4000
+# Build
+FROM install AS build
 
-CMD [ "npm" , "start" ]
+COPY apps/api ./apps/api
+COPY apps/client ./apps/client
+
+RUN npm run build --prefix apps/api
+RUN npm run build --prefix apps/client
+
+# Start
+FROM node:18.16.1-alpine
+
+WORKDIR /usr/src/app
+
+COPY --from=build /usr/src/app .
+
+CMD [ "npm", "start" ]
